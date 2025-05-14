@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/services/api_service.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
 
 class FaceRegisterPage extends StatefulWidget {
   const FaceRegisterPage({super.key});
@@ -110,7 +109,7 @@ class _FaceRegisterPageState extends State<FaceRegisterPage> {
                   : const Text("Kirim Registrasi"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
+                foregroundColor: Colors.white ,
                 padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
               ),
             ),
