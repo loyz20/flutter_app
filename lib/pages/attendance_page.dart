@@ -24,7 +24,13 @@ class AttendancePageState extends State<AttendancePage> {
   late GoogleMapController _mapController;
 
   final ImagePicker _picker = ImagePicker();
-  final LatLng schoolLatLng = const LatLng(-7.3480239, 108.2177564); // ganti lokasi sekolah
+  final LatLng schoolLatLng = const LatLng(-7.3480239, 108.2177564); // ← lokasi sekolah
+
+  @override
+  void initState() {
+    super.initState();
+    _getLocation(); // ambil lokasi otomatis saat halaman dibuka
+  }
 
   Future<void> _pickImage() async {
     final pickedFile =
@@ -32,7 +38,9 @@ class AttendancePageState extends State<AttendancePage> {
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);
+        _statusMessage = "Foto berhasil diambil.";
       });
+      await _getLocation(); // ambil lokasi ulang setelah ambil foto
     }
   }
 
@@ -51,11 +59,13 @@ class AttendancePageState extends State<AttendancePage> {
         _statusMessage =
             "Jarak ke sekolah: ${distance.toStringAsFixed(2)} meter";
       });
-      _mapController.animateCamera(
-        CameraUpdate.newLatLng(
-          LatLng(pos.latitude, pos.longitude),
-        ),
-      );
+      if (mounted) {
+        _mapController.animateCamera(
+          CameraUpdate.newLatLng(
+            LatLng(pos.latitude, pos.longitude),
+          ),
+        );
+      }
     } catch (e) {
       setState(() {
         _statusMessage = "Gagal mendapatkan lokasi: $e";
@@ -63,17 +73,17 @@ class AttendancePageState extends State<AttendancePage> {
     }
   }
 
-  Future<void> _submitAttendance() async {
+  Future<void> _submitAttendance(String type) async {
     if (_imageFile == null || _position == null) {
       setState(() {
-        _statusMessage = "Harap ambil foto dan lokasi terlebih dahulu.";
+        _statusMessage = "Harap ambil foto terlebih dahulu.";
       });
       return;
     }
 
     setState(() {
       _isSubmitting = true;
-      _statusMessage = "Mengirim data absensi...";
+      _statusMessage = "Mengirim absensi $type...";
     });
 
     try {
@@ -82,6 +92,7 @@ class AttendancePageState extends State<AttendancePage> {
         imageFile: _imageFile!,
         latitude: _position!.latitude,
         longitude: _position!.longitude,
+        //attendanceType: type,
       );
 
       setState(() {
@@ -169,37 +180,53 @@ class AttendancePageState extends State<AttendancePage> {
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: _pickImage,
-                  icon: const Icon(Icons.camera_alt),
-                  label: const Text("Ambil Foto"),
-                ),
-                ElevatedButton.icon(
-                  onPressed: _getLocation,
-                  icon: const Icon(Icons.location_on),
-                  label: const Text("Ambil Lokasi"),
-                ),
-              ],
+            ElevatedButton.icon(
+              onPressed: _pickImage,
+              icon: const Icon(Icons.camera_alt),
+              label: const Text("Ambil Foto"),
             ),
             const SizedBox(height: 20),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.check_circle),
-              onPressed:
-                  (_isSubmitting || !isWithinRange) ? null : _submitAttendance,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isWithinRange ? Colors.green : Colors.grey,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
-              ),
-              label: _isSubmitting
-                  ? const SpinKitThreeBounce(
-                      color: Colors.white,
-                      size: 20.0,
-                    )
-                  : const Text("Kirim Absensi"),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.login),
+                    onPressed: (_isSubmitting || !isWithinRange)
+                        ? null
+                        : () => _submitAttendance("masuk"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isWithinRange
+                          ? Colors.green
+                          : Colors.grey.shade400,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    label: _isSubmitting
+                        ? const SpinKitThreeBounce(
+                            color: Colors.white,
+                            size: 20.0,
+                          )
+                        : const Text("Absen Masuk"),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.logout),
+                    onPressed: (_isSubmitting || !isWithinRange)
+                        ? null
+                        : () => _submitAttendance("pulang"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isWithinRange
+                          ? Colors.orange
+                          : Colors.grey.shade400,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    label: _isSubmitting
+                        ? const SizedBox.shrink()
+                        : const Text("Absen Pulang"),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'attendance_page.dart';
+import 'face_register_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -80,6 +81,16 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
           children: [
+            buildMenuButton(
+              icon: Icons.person_add_alt,
+              title: "Daftar Wajah",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const FaceRegisterPage()),
+                );
+              },
+            ),
             buildMenuButton(
               icon: Icons.how_to_reg,
               title: "Ambil Absensi",
